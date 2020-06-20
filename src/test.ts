@@ -142,7 +142,7 @@ async function main() {
 
   // Non testable with assert : .cycle
   let i = 1000;
-  let cycle_generator = n().cycle();
+  let cycle_generator: any = n().cycle();
   while (--i) {
     const value = cycle_generator.next();
     assert.equal([1, 2, 3].includes(value.value as number), true);
@@ -205,6 +205,17 @@ async function main() {
   assert.deepStrictEqual(await an().max(), 3);
   // .min
   assert.deepStrictEqual(await an().min(), 1);
+
+  // Non testable with assert : .cycle
+  i = 1000;
+  cycle_generator = an().cycle();
+  (async () => {
+    while (--i) {
+      const value = await cycle_generator.next();
+      assert.equal([1, 2, 3].includes(value.value as number), true);
+    }
+    assert.equal(i, 0);
+  })();
 
   console.log('All tests passed successfully.');
 }

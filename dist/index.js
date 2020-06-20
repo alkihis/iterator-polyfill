@@ -37,15 +37,32 @@
         },
         map: {
             *value(callback) {
-                for (const value of this)
-                    yield callback(value);
+                const it = this;
+                let value = it.next();
+                while (!value.done) {
+                    const real_value = callback(value.value);
+                    const next_value = yield real_value;
+                    value = it.next(next_value);
+                }
+                return value.value;
             },
         },
         filter: {
             *value(callback) {
-                for (const value of this)
-                    if (callback(value))
-                        yield value;
+                const it = this;
+                let value = it.next();
+                let next_value;
+                while (!value.done) {
+                    const real_value = value.value;
+                    if (callback(real_value)) {
+                        next_value = yield real_value;
+                        value = it.next(next_value);
+                    }
+                    else {
+                        value = it.next(next_value);
+                    }
+                }
+                return value.value;
             },
         },
         find: {
@@ -92,13 +109,19 @@
                 limit = Number(limit);
                 if (limit < 0)
                     throw new RangeError('Invalid limit.');
+                const it = this;
+                let value = it.next();
                 let remaining = limit;
-                for (const value of this) {
+                let next_value;
+                while (!value.done) {
+                    const real_value = value.value;
                     if (remaining <= 0)
                         return;
-                    yield value;
+                    next_value = yield real_value;
+                    value = it.next(next_value);
                     remaining--;
                 }
+                return value.value;
             },
         },
         drop: {
@@ -106,23 +129,36 @@
                 limit = Number(limit);
                 if (limit < 0)
                     throw new RangeError('Invalid limit.');
+                const it = this;
+                let value = it.next();
                 let remaining = limit;
-                for (const value of this) {
+                let next_value;
+                while (!value.done) {
+                    const real_value = value.value;
                     if (remaining > 0) {
+                        value = it.next(next_value);
                         remaining--;
                         continue;
                     }
-                    yield value;
+                    next_value = yield real_value;
+                    value = it.next(next_value);
                 }
+                return value.value;
             },
         },
         asIndexedPairs: {
             *value() {
+                const it = this;
+                let value = it.next();
                 let index = 0;
-                for (const value of this) {
-                    yield [index, value];
+                while (!value.done) {
+                    const real_value = value.value;
+                    const next_value = yield [index, real_value];
+                    ;
+                    value = it.next(next_value);
                     index++;
                 }
+                return value.value;
             }
         },
         flatMap: {
@@ -130,16 +166,22 @@
                 if (typeof mapper !== 'function') {
                     throw new TypeError('Mapper must be a function.');
                 }
-                for (const value of this) {
-                    const mapped = mapper(value);
+                const it = this;
+                let value = it.next();
+                let next_value;
+                while (!value.done) {
+                    const real_value = value.value;
+                    const mapped = mapper(real_value);
                     if (Symbol.iterator in mapped) {
                         // @ts-ignore
-                        yield* mapped[Symbol.iterator]();
+                        next_value = yield* mapped[Symbol.iterator]();
                     }
                     else {
-                        yield mapped;
+                        next_value = yield mapped;
                     }
+                    value = it.next(next_value);
                 }
+                return value.value;
             },
         },
         reduce: {
@@ -201,31 +243,46 @@
             *value(...others) {
                 const it_array = [this, ...others].map((e) => e[Symbol.iterator]());
                 let values = it_array.map(e => e.next());
+                let next_value;
                 while (values.every(e => !e.done)) {
-                    yield values.map(e => e.value);
-                    values = it_array.map(e => e.next());
+                    next_value = yield values.map(e => e.value);
+                    values = it_array.map(e => e.next(next_value));
                 }
             },
         },
         takeWhile: {
             *value(callback) {
-                for (const value of this) {
-                    if (callback(value))
-                        yield value;
+                const it = this;
+                let value = it.next();
+                let next_value;
+                while (!value.done) {
+                    const real_value = value.value;
+                    if (callback(real_value))
+                        next_value = yield real_value;
                     else
-                        break;
+                        return;
+                    value = it.next(next_value);
                 }
+                return value.value;
             }
         },
         dropWhile: {
             *value(callback) {
+                const it = this;
+                let value = it.next();
+                let next_value;
                 let finished = false;
-                for (const value of this) {
-                    if (!finished && callback(value))
+                while (!value.done) {
+                    const real_value = value.value;
+                    if (!finished && callback(real_value)) {
+                        value = it.next(next_value);
                         continue;
+                    }
                     finished = true;
-                    yield value;
+                    next_value = yield real_value;
+                    value = it.next(next_value);
                 }
+                return value.value;
             }
         },
         fuse: {
@@ -275,9 +332,13 @@
         cycle: {
             *value() {
                 const values = [];
-                for (const value of this) {
-                    values.push(value);
-                    yield value;
+                const it = this;
+                let value = it.next();
+                while (!value.done) {
+                    const real_value = value.value;
+                    values.push(real_value);
+                    const next_value = yield real_value;
+                    value = it.next(next_value);
                 }
                 while (true) {
                     yield* values;
@@ -299,15 +360,29 @@
         },
         map: {
             async *value(callback) {
-                for await (const value of this)
-                    yield callback(value);
+                const it = this;
+                let value = await it.next();
+                while (!value.done) {
+                    const real_value = callback(value.value);
+                    const next_value = yield real_value;
+                    value = await it.next(next_value);
+                }
+                return value.value;
             },
         },
         filter: {
             async *value(callback) {
-                for await (const value of this)
-                    if (callback(value))
-                        yield value;
+                const it = this;
+                let value = await it.next();
+                let next_value;
+                while (!value.done) {
+                    const real_value = value.value;
+                    if (callback(real_value)) {
+                        next_value = yield real_value;
+                    }
+                    value = await it.next(next_value);
+                }
+                return value.value;
             },
         },
         find: {
@@ -354,13 +429,19 @@
                 limit = Number(limit);
                 if (limit < 0)
                     throw new RangeError('Invalid limit.');
+                const it = this;
+                let value = await it.next();
+                let next_value;
                 let remaining = limit;
-                for await (const value of this) {
+                while (!value.done) {
                     if (remaining <= 0)
                         return;
-                    yield value;
+                    const real_value = value.value;
+                    next_value = yield real_value;
+                    value = await it.next(next_value);
                     remaining--;
                 }
+                return value.value;
             },
         },
         drop: {
@@ -368,23 +449,36 @@
                 limit = Number(limit);
                 if (limit < 0)
                     throw new RangeError('Invalid limit.');
+                const it = this;
+                let value = await it.next();
+                let next_value;
                 let remaining = limit;
-                for await (const value of this) {
+                while (!value.done) {
                     if (remaining > 0) {
                         remaining--;
+                        value = await it.next(next_value);
                         continue;
                     }
-                    yield value;
+                    const real_value = value.value;
+                    next_value = yield real_value;
+                    value = await it.next(next_value);
+                    remaining--;
                 }
+                return value.value;
             },
         },
         asIndexedPairs: {
             async *value() {
                 let index = 0;
-                for await (const value of this) {
-                    yield [index, value];
+                const it = this;
+                let value = await it.next();
+                while (!value.done) {
+                    const real_value = value.value;
+                    const next_value = yield [index, real_value];
                     index++;
+                    value = await it.next(next_value);
                 }
+                return value.value;
             }
         },
         flatMap: {
@@ -392,8 +486,12 @@
                 if (typeof mapper !== 'function') {
                     throw new TypeError('Mapper must be a function.');
                 }
-                for await (const value of this) {
-                    const mapped = mapper(value);
+                const it = this;
+                let value = await it.next();
+                let next_value;
+                while (!value.done) {
+                    const real_value = value.value;
+                    const mapped = mapper(real_value);
                     if (Symbol.asyncIterator in mapped) {
                         // @ts-ignore
                         yield* mapped[Symbol.asyncIterator]();
@@ -405,7 +503,9 @@
                     else {
                         yield mapped;
                     }
+                    value = await it.next(next_value);
                 }
+                return value.value;
             },
         },
         reduce: {
@@ -475,23 +575,39 @@
         },
         takeWhile: {
             async *value(callback) {
-                for await (const value of this) {
-                    if (callback(value))
-                        yield value;
-                    else
-                        break;
+                const it = this;
+                let value = await it.next();
+                let next_value;
+                while (!value.done) {
+                    const real_value = value.value;
+                    if (callback(real_value)) {
+                        next_value = yield real_value;
+                    }
+                    else {
+                        return;
+                    }
+                    value = await it.next(next_value);
                 }
+                return value.value;
             }
         },
         dropWhile: {
             async *value(callback) {
+                const it = this;
+                let value = await it.next();
+                let next_value;
                 let finished = false;
-                for await (const value of this) {
-                    if (!finished && callback(value))
+                while (!value.done) {
+                    const real_value = value.value;
+                    if (!finished && callback(real_value)) {
+                        value = await it.next(next_value);
                         continue;
+                    }
                     finished = true;
-                    yield value;
+                    next_value = yield real_value;
+                    value = await it.next(next_value);
                 }
+                return value.value;
             }
         },
         fuse: {
@@ -541,9 +657,13 @@
         cycle: {
             async *value() {
                 const values = [];
-                for await (const value of this) {
-                    values.push(value);
-                    yield value;
+                const it = this;
+                let value = await it.next();
+                while (!value.done) {
+                    const real_value = value.value;
+                    values.push(real_value);
+                    const next_value = yield real_value;
+                    value = await it.next(next_value);
                 }
                 while (true) {
                     for (const value of values) {
