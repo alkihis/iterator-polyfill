@@ -949,17 +949,66 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   });
 
   if (!('Iterator' in _globalThis)) {
-    // @ts-ignore
-    (_globalThis as Window).Iterator = {
-      // @ts-ignore
-      protoype: IteratorPrototype
+    const Iterator = function Iterator(iterable: Iterator<any> | Iterable<any>) {
+      let it = iterable || [];
+      if (!('next' in it)) {
+        it = it[Symbol.iterator]();
+      }
+
+      // Generator have the right prototype, so its ok to return them
+      return (function* () {
+        let value = it.next();
+
+        while (!value.done) {
+          const next_value = yield value.value;
+          value = it.next(next_value);
+        }
+
+        return value.value;
+      })();
     };
+    Iterator.prototype = IteratorPrototype;
+
+    // @ts-ignore
+    (_globalThis as Window).Iterator = Iterator;
   }
   if (!('AsyncIterator' in _globalThis)) {
-    // @ts-ignore
-    (_globalThis as Window).AsyncIterator = {
-      // @ts-ignore
-      protoype: AsyncIteratorPrototype
+    const AsyncIterator = function AsyncIterator(iterable: AsyncIterator<any> | AsyncIterable<any> | Iterator<any> | Iterable<any>) {
+      // Generator have the right prototype, so its ok to return them
+      let it = iterable || [];
+
+      // If given thing isn't an iterator, just an iterable
+      if (!('next' in it)) {
+        if (Symbol.asyncIterator in it) {
+          // @ts-ignore Give a AsyncIterator
+          it = it[Symbol.asyncIterator]();
+        }
+        else if (Symbol.iterator in it) {
+          // @ts-ignore Give a Iterator
+          it = it[Symbol.iterator]();
+        }
+        else {
+          throw new TypeError('Bad iterable.');
+        }
+      }
+      // else: thing is already an iterator/asynciterator
+
+      const real_it = it as AsyncIterator<any> | Iterator<any>;
+
+      return (async function* () {
+        let value = await real_it.next();
+
+        while (!value.done) {
+          const next_value = yield value.value;
+          value = await real_it.next(next_value);
+        }
+
+        return value.value;
+      })();
     };
+    AsyncIterator.prototype = AsyncIteratorPrototype;
+
+    // @ts-ignore
+    (_globalThis as Window).AsyncIterator = AsyncIterator;
   }
 })();
