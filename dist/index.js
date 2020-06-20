@@ -398,6 +398,10 @@
                         // @ts-ignore
                         yield* mapped[Symbol.asyncIterator]();
                     }
+                    else if (Symbol.iterator in mapped) {
+                        // @ts-ignore
+                        yield* mapped[Symbol.iterator]();
+                    }
                     else {
                         yield mapped;
                     }

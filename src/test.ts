@@ -36,11 +36,39 @@ async function* asyncNumbers() {
   yield 3;
 }
 
+async function* asyncDropWhileCompatible() {
+  yield 1;
+  yield 2;
+  yield 3;
+  yield 1;
+}
+
+async function* asyncTakeWhileCompatible() {
+  yield 1;
+  yield 2;
+  yield 4;
+  yield 0;
+  yield 1;
+}
+
+async function* asyncFuseCompatible() {
+  yield 1;
+  yield 2;
+  yield 3;
+  yield undefined;
+  yield 5;
+}
+
+
 const n = numbers;
 const dwc = dropWhileCompatible;
 const twc = takeWhileCompatible;
 const fc = fuseCompatible;
+
 const an = asyncNumbers;
+const adwc = asyncDropWhileCompatible;
+const atwc = asyncTakeWhileCompatible;
+const afc = asyncFuseCompatible;
 
 async function main() {
   let collected: any = numbers()
@@ -124,6 +152,59 @@ async function main() {
   /// END OF sync iterator tests
 
   // ASYNC ITERATOR TESTS
+  // .map
+  assert.deepStrictEqual(await an().map(e => e * 2).toArray(), [2, 4, 6]);
+  // .filter
+  assert.deepStrictEqual(await an().filter(e => e % 2 === 0).toArray(), [2]);
+  // .take
+  assert.deepStrictEqual(await an().take(2).toArray(), [1, 2]);
+  // .drop
+  assert.deepStrictEqual(await an().drop(1).toArray(), [2, 3]);
+  // .asIndexedPairs
+  assert.deepStrictEqual(await an().asIndexedPairs().toArray(), [[0, 1], [1, 2], [2, 3]]);
+  // .flatMap
+  assert.deepStrictEqual(await an().flatMap(e => [e, -e]).toArray(), [1, -1, 2, -2, 3, -3]);
+  // .find
+  assert.deepStrictEqual(await an().find(e => e === 2), 2);
+  assert.deepStrictEqual(await an().find((e: number) => e === 4), undefined);
+  // .every
+  assert.deepStrictEqual(await an().every(e => e > 0), true);
+  assert.deepStrictEqual(await an().every(e => e <= 2), false);
+  // .some
+  assert.deepStrictEqual(await an().some(e => e <= 2), true);
+  assert.deepStrictEqual(await an().some(e => e <= 0), false);
+  // .toArray
+  assert.deepStrictEqual(await an().toArray(), [1, 2, 3]);
+  // .reduce
+  assert.deepStrictEqual(await an().reduce((acc: number, val) => acc + val), 6);
+  assert.deepStrictEqual(await an().reduce((acc, val) => acc + val, 0), 6);
+  assert.deepStrictEqual(await an().reduce((acc, val) => acc - val, 0), -6);
+  // .forEach
+  assert.deepStrictEqual(await an().forEach(console.debug), undefined);
+
+  // Non spec for sync iterator
+  // .join
+  assert.deepStrictEqual(await an().join(','), '1,2,3');
+  // .count
+  assert.deepStrictEqual(await an().count(), 3);
+  // .chain
+  assert.deepStrictEqual(await an().chain(an()).toArray(), [1, 2, 3, 1, 2, 3]);
+  // .zip
+  assert.deepStrictEqual(await an().zip(an()).toArray(), [[1, 1], [2, 2], [3, 3]]);
+  // .dropWhile
+  assert.deepStrictEqual(await adwc().dropWhile(e => e <= 2).toArray(), [3, 1]);
+  // .takeWhile
+  assert.deepStrictEqual(await atwc().takeWhile(e => e <= 2).toArray(), [1, 2]);
+  // .fuse
+  assert.deepStrictEqual(await afc().fuse().toArray(), [1, 2, 3]);
+  // .partition
+  assert.deepStrictEqual(await an().partition(c => c <= 2), [[1, 2], [3]]);
+  // .findIndex
+  assert.deepStrictEqual(await an().findIndex(e => e === 2), 1);
+  // .max
+  assert.deepStrictEqual(await an().max(), 3);
+  // .min
+  assert.deepStrictEqual(await an().min(), 1);
 
 
   console.log('All tests passed successfully.');
