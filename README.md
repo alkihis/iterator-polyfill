@@ -2,6 +2,26 @@
 
 Provide a polyfill for all methods defined in [iterator helpers proposal](https://github.com/tc39/proposal-iterator-helpers), both for `Iterator` and `AsyncIterator`.
 
+## Installation
+
+Install it with npm/yarn/what you want.
+
+```bash
+npm i iterator-polyfill
+```
+
+Include it into your JavaScript/TypeScript code.
+
+```js
+// With ECMA modules
+import 'iterator-polyfill';
+
+// or with CommonJS
+require('iterator-polyfill');
+```
+
+TypeScript types are bundled within the package as global interfaces, so using the base iterators (array iterators, generators) should not throw type warnings.
+
 ## Implementation
 
 The polyfill auto applies to iterators used by arrays, generators and async generators. Usually, you don't need to polyfill them.
@@ -21,7 +41,6 @@ Object.setPrototypeOf(my_it, Iterator.prototype);
 ## Example
 
 Iterator and AsyncIterator are directly bundled into most of needed prototypes.
-TypeScript types are bundled within the package as global interfaces.
 
 ```js
 function* numbers() {
