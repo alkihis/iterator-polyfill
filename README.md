@@ -26,8 +26,8 @@ TypeScript types are bundled within the package as global interfaces, so using t
 
 The polyfill auto applies to iterators used by arrays, generators and async generators. Usually, you don't need to polyfill them.
 
-For your own polyfills, you can use `globalThis.Iterator.prototype` and `globalThis.AsyncIterator.prototype`.
-Your JS engine must support async generator and `Symbol.asyncIterator` property.
+For your own objects, you can use `globalThis.Iterator.prototype` and `globalThis.AsyncIterator.prototype`.
+Your JS engine must support async generator and `Symbol.asyncIterator` property in order to read the polyfill properly.
 
 ```js
 const my_it = {
