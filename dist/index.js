@@ -674,54 +674,13 @@
         },
     });
     if (!('Iterator' in _globalThis)) {
-        const Iterator = function Iterator(iterable) {
-            let it = iterable || [];
-            if (!('next' in it)) {
-                it = it[Symbol.iterator]();
-            }
-            // Generator have the right prototype, so its ok to return them
-            return (function* () {
-                let value = it.next();
-                while (!value.done) {
-                    const next_value = yield value.value;
-                    value = it.next(next_value);
-                }
-                return value.value;
-            })();
-        };
+        const Iterator = function Iterator() { };
         Iterator.prototype = IteratorPrototype;
         // @ts-ignore
         _globalThis.Iterator = Iterator;
     }
     if (!('AsyncIterator' in _globalThis)) {
-        const AsyncIterator = function AsyncIterator(iterable) {
-            // Generator have the right prototype, so its ok to return them
-            let it = iterable || [];
-            // If given thing isn't an iterator, just an iterable
-            if (!('next' in it)) {
-                if (Symbol.asyncIterator in it) {
-                    // @ts-ignore Give a AsyncIterator
-                    it = it[Symbol.asyncIterator]();
-                }
-                else if (Symbol.iterator in it) {
-                    // @ts-ignore Give a Iterator
-                    it = it[Symbol.iterator]();
-                }
-                else {
-                    throw new TypeError('Bad iterable.');
-                }
-            }
-            // else: thing is already an iterator/asynciterator
-            const real_it = it;
-            return (async function* () {
-                let value = await real_it.next();
-                while (!value.done) {
-                    const next_value = yield value.value;
-                    value = await real_it.next(next_value);
-                }
-                return value.value;
-            })();
-        };
+        const AsyncIterator = function AsyncIterator() { };
         AsyncIterator.prototype = AsyncIteratorPrototype;
         // @ts-ignore
         _globalThis.AsyncIterator = AsyncIterator;
