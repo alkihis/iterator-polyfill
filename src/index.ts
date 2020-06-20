@@ -295,6 +295,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
 
         for (const value of this) {
           yield [index, value];
+          index++;
         }
       }
     },
@@ -309,7 +310,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
 
           if (Symbol.iterator in mapped) {
             // @ts-ignore
-            yield* mapped[Symbol.iterator]().flatMap(mapper);
+            yield* mapped[Symbol.iterator]();
           } 
           else {
             yield mapped;
@@ -360,10 +361,13 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         let first = true;
 
         for (const value of this) {
-          if (first) 
+          if (first) {
             first = false;
-          else 
+            final += value;
+          }
+          else {
             final += string + value;
+          }
         }
 
         return final;
@@ -380,7 +384,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     zip: {
       *value<T, O>(...others: IterableIterator<O>[]) : Iterator<(T | O)[]> {
-        const it_array = [self, ...others].map((e: any) => e[Symbol.iterator]() as Iterator<T | O>);
+        const it_array = [this, ...others].map((e: any) => e[Symbol.iterator]() as Iterator<T | O>);
         let values = it_array.map(e => e.next());
 
         while (values.every(e => !e.done)) {
@@ -587,6 +591,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
 
         for await (const value of this) {
           yield [index, value];
+          index++;
         }
       }
     },
@@ -601,7 +606,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
 
           if (Symbol.asyncIterator in mapped) {
             // @ts-ignore
-            yield* mapped[Symbol.asyncIterator]().flatMap(mapper);
+            yield* mapped[Symbol.asyncIterator]();
           } 
           else {
             yield mapped;
@@ -642,10 +647,13 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         let first = true;
 
         for await (const value of this) {
-          if (first) 
+          if (first) {
             first = false;
-          else 
+            final += value;
+          }
+          else {
             final += string + value;
+          }
         }
 
         return final;
@@ -672,7 +680,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     zip: {
       async *value<T, O>(...others: AsyncIterableIterator<O>[]) : AsyncIterator<(T | O)[]> {
-        const it_array = [self, ...others].map((e: any) => e[Symbol.asyncIterator]() as AsyncIterator<T | O>);
+        const it_array = [this, ...others].map((e: any) => e[Symbol.asyncIterator]() as AsyncIterator<T | O>);
         let values = await Promise.all(it_array.map(e => e.next()));
 
         while (values.every(e => !e.done)) {

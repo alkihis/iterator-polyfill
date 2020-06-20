@@ -12,5 +12,8 @@
     "type": "git",
     "url": "https://github.com/alkihis/iterator-polyfill"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^14.0.13"
+  }
 }
