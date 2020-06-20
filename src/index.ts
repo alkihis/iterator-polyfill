@@ -46,7 +46,7 @@ interface Iterator<T, TReturn = any, TNext = undefined> {
   /** Consume iterator and collapse values inside an array. */
   toArray(max_count?: number) : T[];
   /** Accumulate each item inside **acc** for each value **value**. */
-  reduce<V>(reducer: (acc: V, value: T) => V, initial_value?: V) : V;
+  reduce<V = T>(reducer: (acc: V, value: T) => V, initial_value?: V) : V;
   /** Iterate over each value of iterator by calling **callback** for each value. */
   forEach(callback: (value: T) => any) : void;
 
@@ -111,7 +111,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   /** Consume iterator and collapse values inside an array. */
   toArray(max_count?: number) : Promise<T[]>;
   /** Accumulate each item inside **acc** for each value **value**. */
-  reduce<V>(reducer: (acc: V, value: T) => V, initial_value?: V) : Promise<V>;
+  reduce<V = T>(reducer: (acc: V, value: T) => V, initial_value?: V) : Promise<V>;
   /** Iterate over each value of iterator by calling **callback** for each value. */
   forEach(callback: (value: T) => any) : Promise<void>;
 

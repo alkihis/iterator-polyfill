@@ -206,7 +206,6 @@ async function main() {
   // .min
   assert.deepStrictEqual(await an().min(), 1);
 
-
   console.log('All tests passed successfully.');
 }
 
