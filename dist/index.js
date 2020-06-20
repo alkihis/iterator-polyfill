@@ -74,19 +74,6 @@
                 return false;
             }
         },
-        join: {
-            value(string) {
-                let final = '';
-                let first = true;
-                for (const value of this) {
-                    if (first)
-                        first = false;
-                    else
-                        final += string + value;
-                }
-                return final;
-            }
-        },
         toArray: {
             value(max_count = Infinity) {
                 const values = [];
@@ -99,14 +86,6 @@
                 }
                 return values;
             }
-        },
-        count: {
-            value() {
-                let count = 0;
-                for (const _ of this)
-                    count++;
-                return count;
-            },
         },
         take: {
             *value(limit) {
@@ -142,6 +121,7 @@
                 let index = 0;
                 for (const value of this) {
                     yield [index, value];
+                    index++;
                 }
             }
         },
@@ -154,7 +134,7 @@
                     const mapped = mapper(value);
                     if (Symbol.iterator in mapped) {
                         // @ts-ignore
-                        yield* mapped[Symbol.iterator]().flatMap(mapper);
+                        yield* mapped[Symbol.iterator]();
                     }
                     else {
                         yield mapped;
@@ -183,6 +163,126 @@
         },
         [Symbol.toStringTag]: {
             value: 'IteratorPrototype'
+        },
+        /* OUTSIDE PROPOSAL */
+        count: {
+            value() {
+                let count = 0;
+                for (const _ of this)
+                    count++;
+                return count;
+            },
+        },
+        join: {
+            value(string) {
+                let final = '';
+                let first = true;
+                for (const value of this) {
+                    if (first) {
+                        first = false;
+                        final += value;
+                    }
+                    else {
+                        final += string + value;
+                    }
+                }
+                return final;
+            }
+        },
+        chain: {
+            *value(...iterables) {
+                yield* this;
+                for (const it of iterables) {
+                    yield* it;
+                }
+            }
+        },
+        zip: {
+            *value(...others) {
+                const it_array = [this, ...others].map((e) => e[Symbol.iterator]());
+                let values = it_array.map(e => e.next());
+                while (values.every(e => !e.done)) {
+                    yield values.map(e => e.value);
+                    values = it_array.map(e => e.next());
+                }
+            },
+        },
+        takeWhile: {
+            *value(callback) {
+                for (const value of this) {
+                    if (callback(value))
+                        yield value;
+                    else
+                        break;
+                }
+            }
+        },
+        dropWhile: {
+            *value(callback) {
+                let finished = false;
+                for (const value of this) {
+                    if (!finished && callback(value))
+                        continue;
+                    finished = true;
+                    yield value;
+                }
+            }
+        },
+        fuse: {
+            value() {
+                return this.takeWhile((e) => e !== undefined && e !== null);
+            }
+        },
+        partition: {
+            value(callback) {
+                const partition1 = [], partition2 = [];
+                for (const value of this) {
+                    if (callback(value))
+                        partition1.push(value);
+                    else
+                        partition2.push(value);
+                }
+                return [partition1, partition2];
+            },
+        },
+        findIndex: {
+            value(callback) {
+                for (const [index, value] of this.asIndexedPairs()) {
+                    if (callback(value))
+                        return index;
+                }
+                return -1;
+            }
+        },
+        max: {
+            value() {
+                return this.reduce((acc, val) => {
+                    if (acc > val)
+                        return acc;
+                    return val;
+                });
+            },
+        },
+        min: {
+            value() {
+                return this.reduce((acc, val) => {
+                    if (acc < val)
+                        return acc;
+                    return val;
+                });
+            },
+        },
+        cycle: {
+            *value() {
+                const values = [];
+                for (const value of this) {
+                    values.push(value);
+                    yield value;
+                }
+                while (true) {
+                    yield* values;
+                }
+            },
         },
     });
     /// Polyfill for AsyncIterator
@@ -236,19 +336,6 @@
                 return false;
             }
         },
-        join: {
-            async value(string) {
-                let final = '';
-                let first = true;
-                for await (const value of this) {
-                    if (first)
-                        first = false;
-                    else
-                        final += string + value;
-                }
-                return final;
-            }
-        },
         toArray: {
             async value(max_count = Infinity) {
                 const values = [];
@@ -261,14 +348,6 @@
                 }
                 return values;
             }
-        },
-        count: {
-            async value() {
-                let count = 0;
-                for await (const _ of this)
-                    count++;
-                return count;
-            },
         },
         take: {
             async *value(limit) {
@@ -304,6 +383,7 @@
                 let index = 0;
                 for await (const value of this) {
                     yield [index, value];
+                    index++;
                 }
             }
         },
@@ -316,7 +396,7 @@
                     const mapped = mapper(value);
                     if (Symbol.asyncIterator in mapped) {
                         // @ts-ignore
-                        yield* mapped[Symbol.asyncIterator]().flatMap(mapper);
+                        yield* mapped[Symbol.asyncIterator]();
                     }
                     else {
                         yield mapped;
@@ -345,6 +425,128 @@
         },
         [Symbol.toStringTag]: {
             value: 'AsyncIteratorPrototype'
+        },
+        /* OUTSIDE PROPOSAL */
+        join: {
+            async value(string) {
+                let final = '';
+                let first = true;
+                for await (const value of this) {
+                    if (first) {
+                        first = false;
+                        final += value;
+                    }
+                    else {
+                        final += string + value;
+                    }
+                }
+                return final;
+            }
+        },
+        count: {
+            async value() {
+                let count = 0;
+                for await (const _ of this)
+                    count++;
+                return count;
+            },
+        },
+        chain: {
+            async *value(...iterables) {
+                yield* this;
+                for (const it of iterables) {
+                    yield* it;
+                }
+            }
+        },
+        zip: {
+            async *value(...others) {
+                const it_array = [this, ...others].map((e) => e[Symbol.asyncIterator]());
+                let values = await Promise.all(it_array.map(e => e.next()));
+                while (values.every(e => !e.done)) {
+                    yield values.map(e => e.value);
+                    values = await Promise.all(it_array.map(e => e.next()));
+                }
+            },
+        },
+        takeWhile: {
+            async *value(callback) {
+                for await (const value of this) {
+                    if (callback(value))
+                        yield value;
+                    else
+                        break;
+                }
+            }
+        },
+        dropWhile: {
+            async *value(callback) {
+                let finished = false;
+                for await (const value of this) {
+                    if (!finished && callback(value))
+                        continue;
+                    finished = true;
+                    yield value;
+                }
+            }
+        },
+        fuse: {
+            value() {
+                return this.takeWhile((e) => e !== undefined && e !== null);
+            }
+        },
+        partition: {
+            async value(callback) {
+                const partition1 = [], partition2 = [];
+                for await (const value of this) {
+                    if (callback(value))
+                        partition1.push(value);
+                    else
+                        partition2.push(value);
+                }
+                return [partition1, partition2];
+            },
+        },
+        findIndex: {
+            async value(callback) {
+                for await (const [index, value] of this.asIndexedPairs()) {
+                    if (callback(value))
+                        return index;
+                }
+                return -1;
+            }
+        },
+        max: {
+            value() {
+                return this.reduce((acc, val) => {
+                    if (acc > val)
+                        return acc;
+                    return val;
+                });
+            },
+        },
+        min: {
+            value() {
+                return this.reduce((acc, val) => {
+                    if (acc < val)
+                        return acc;
+                    return val;
+                });
+            },
+        },
+        cycle: {
+            async *value() {
+                const values = [];
+                for await (const value of this) {
+                    values.push(value);
+                    yield value;
+                }
+                while (true) {
+                    for (const value of values) {
+                        yield value;
+                    }
+                }
+            },
         },
     });
     if (!('Iterator' in _globalThis)) {
