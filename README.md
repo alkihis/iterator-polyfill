@@ -38,6 +38,19 @@ const my_it = {
 Object.setPrototypeOf(my_it, Iterator.prototype);
 ```
 
+You can also extends `Iterator` or `AsyncIterator` in your own classes, and implement `.next` in them.
+
+```js
+class MyIterator extends Iterator {
+  next() {
+    return {
+      value: 3,
+      done: false,
+    };
+  }
+}
+```
+
 ## Example
 
 Iterator and AsyncIterator are directly bundled into most of needed prototypes.
@@ -125,3 +138,5 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   forEach(callback: (value: T) => any) : Promise<void>;
 }
 ```
+
+A few more methods has been implemented, but they're not part of the specification. See `index.ts` to see them inside the `Iterator` and `AsyncIterator` interface.
