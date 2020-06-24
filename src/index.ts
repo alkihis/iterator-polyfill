@@ -547,8 +547,23 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       }
     },
     fuse: {
-      value() {
-        return this.takeWhile((e: any) => e !== undefined && e !== null);
+      *value() {
+        const it = this;
+        let value = it.next();
+        let next_value;
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (real_value !== undefined && real_value !== null)
+            next_value = yield real_value;
+          else
+            return;
+
+          value = it.next(next_value);
+        }
+
+        return value.value;
       }
     },
     partition: {
@@ -574,16 +589,18 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     findIndex: {
       value<T>(callback: (value: T) => boolean) {
-        const it = this.asIndexedPairs();
+        const it = this;
+        let i = 0;
         let value = it.next();
 
         while (!value.done) {
-          const [index, real_value] = value.value;
+          const real_value = value.value;
 
           if (callback(real_value))
-            return index;
+            return i;
 
           value = it.next();
+          i++;
         }
 
         return -1;
@@ -591,20 +608,40 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     max: {
       value() {
-        return this.reduce((acc: number, val: number) => {
-          if (acc > val)
-            return acc;
-          return val;
-        });
+        let max = -Infinity;
+
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (max < real_value)
+            max = real_value;
+
+          value = it.next();
+        }
+
+        return max;
       },
     },
     min: {
       value() {
-        return this.reduce((acc: number, val: number) => {
-          if (acc < val)
-            return acc;
-          return val;
-        });
+        let min = Infinity;
+
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (min > real_value)
+            min = real_value;
+
+          value = it.next();
+        }
+
+        return min;
       },
     },
     cycle: {
@@ -994,8 +1031,25 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       }
     },
     fuse: {
-      value() {
-        return this.takeWhile((e: any) => e !== undefined && e !== null);
+      async *value() {
+        const it = this;
+        let value = await it.next();
+        let next_value;
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (real_value !== undefined && real_value !== null) {
+            next_value = yield real_value;
+          }
+          else {
+            return;
+          }
+
+          value = await it.next(next_value);
+        }
+
+        return value.value;
       }
     },
     partition: {
@@ -1021,37 +1075,59 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     findIndex: {
       async value<T>(callback: (value: T) => boolean) {
-        const it = this.asIndexedPairs();
+        const it = this;
         let value = await it.next();
+        let i = 0;
 
         while (!value.done) {
-          const [index, real_value] = value.value;
+          const real_value = value.value;
 
           if (callback(real_value))
-            return index;
+            return i;
 
           value = await it.next();
+          i++;
         }
 
         return -1;
       } 
     },
     max: {
-      value() {
-        return this.reduce((acc: number, val: number) => {
-          if (acc > val)
-            return acc;
-          return val;
-        });
+      async value() {
+        let max = -Infinity;
+
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (max < real_value)
+            max = real_value;
+
+          value = await it.next();
+        }
+
+        return max;
       },
     },
     min: {
-      value() {
-        return this.reduce((acc: number, val: number) => {
-          if (acc < val)
-            return acc;
-          return val;
-        });
+      async value() {
+        let min = Infinity;
+
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (min > real_value)
+            min = real_value;
+
+          value = await it.next();
+        }
+
+        return min;
       },
     },
     cycle: {
