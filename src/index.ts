@@ -234,17 +234,31 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     find: {
       value<T>(callback: (value: boolean) => T) {
-        for (const value of this) {
-          if (callback(value))
-            return value;
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (callback(real_value))
+            return real_value;
+
+          value = it.next();
         }
       }
     },
     every: {
       value<T>(callback: (value: T) => boolean) {
-        for (const value of this) {
-          if (!callback(value))
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (!callback(real_value))
             return false;
+
+          value = it.next();
         }
     
         return true;
@@ -252,9 +266,16 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     some: {
       value<T>(callback: (value: T) => boolean) {
-        for (const value of this) {
-          if (callback(value))
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (callback(real_value))
             return true;
+
+          value = it.next();
         }
     
         return false;
@@ -264,14 +285,21 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       value(max_count = Infinity) {
         const values = [];
 
-        for (const value of this) {
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
           if (max_count <= 0)
             return values;
-          
-          values.push(value);
+
+          values.push(real_value);
 
           if (max_count !== Infinity)
             max_count--;
+
+          value = it.next();
         }
 
         return values;
@@ -377,13 +405,18 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       value<T, V>(reducer: (acc: V, value: T) => V, initial_value?: V) {
         let acc = initial_value;
 
-        const it = this[Symbol.iterator]();
+        const it = this;
         if (acc === undefined) {
           acc = it.next().value;
         }
 
-        for (const value of it) {
-          acc = reducer(acc!, value);
+        let value = it.next();
+        while (!value.done) {
+          const real_value = value.value;
+
+          acc = reducer(acc!, real_value);
+
+          value = it.next();
         }
 
         return acc;
@@ -391,8 +424,16 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     forEach: {
       value<T>(callback: (value: T) => any) {
-        for (const value of this)
-          callback(value);
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          callback(real_value);
+
+          value = it.next();
+        }
       }
     },
     [Symbol.toStringTag]: {
@@ -403,9 +444,14 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     count: {
       value() {
         let count = 0;
-        
-        for (const _ of this)
+
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
           count++;
+          value = it.next();
+        }
 
         return count;
       },
@@ -415,14 +461,21 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         let final = '';
         let first = true;
 
-        for (const value of this) {
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
           if (first) {
             first = false;
-            final += value;
+            final += real_value;
           }
           else {
-            final += string + value;
+            final += string + real_value;
           }
+
+          value = it.next();
         }
 
         return final;
@@ -439,7 +492,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     zip: {
       *value<T, O>(...others: IterableIterator<O>[]) : Iterator<(T | O)[]> {
-        const it_array = [this, ...others].map((e: any) => e[Symbol.iterator]() as Iterator<T | O>);
+        const it_array = [this, ...others].map((e: any) => Symbol.iterator in e ? e[Symbol.iterator]() : e as Iterator<T | O>);
         let values = it_array.map(e => e.next());
         let next_value: any;
 
@@ -502,11 +555,18 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       value<T>(callback: (value: T) => boolean) {
         const partition1 = [], partition2 = [];
 
-        for (const value of this) {
-          if (callback(value)) 
-            partition1.push(value);
+        const it = this;
+        let value = it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (callback(real_value))
+            partition1.push(real_value);
           else
-            partition2.push(value);
+            partition2.push(real_value);
+
+          value = it.next();
         }
 
         return [partition1, partition2];
@@ -514,9 +574,16 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     findIndex: {
       value<T>(callback: (value: T) => boolean) {
-        for (const [index, value] of this.asIndexedPairs()) {
-          if (callback(value))
+        const it = this.asIndexedPairs();
+        let value = it.next();
+
+        while (!value.done) {
+          const [index, real_value] = value.value;
+
+          if (callback(real_value))
             return index;
+
+          value = it.next();
         }
 
         return -1;
@@ -612,17 +679,31 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     find: {
       async value<T>(callback: (value: T) => boolean) {
-        for await (const value of this) {
-          if (callback(value))
-            return value;
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (callback(real_value))
+            return real_value;
+
+          value = await it.next();
         }
       }
     },
     every: {
       async value<T>(callback: (value: T) => boolean) {
-        for await (const value of this) {
-          if (!callback(value))
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (!callback(real_value))
             return false;
+
+          value = await it.next();
         }
     
         return true;
@@ -630,9 +711,16 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     some: {
       async value<T>(callback: (value: T) => boolean) {
-        for await (const value of this) {
-          if (callback(value))
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          if (callback(real_value))
             return true;
+
+          value = await it.next();
         }
     
         return false;
@@ -642,14 +730,21 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       async value(max_count = Infinity) {
         const values = [];
 
-        for await (const value of this) {
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
           if (max_count <= 0)
             return values;
-          
-          values.push(value);
+
+          values.push(real_value);
 
           if (max_count !== Infinity)
             max_count--;
+
+          value = await it.next();
         }
 
         return values;
@@ -761,7 +856,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       async value<T, V>(reducer: (acc: V, value: T) => V, initial_value?: V) {
         let acc = initial_value;
 
-        const it = this[Symbol.asyncIterator]();
+        const it = this;
         if (acc === undefined) {
           acc = (await it.next()).value;
         }
@@ -775,8 +870,16 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     forEach: {
       async value<T>(callback: (value: T) => any) {
-        for await (const value of this)
-          callback(value);
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+
+          callback(real_value);
+
+          value = await it.next();
+        }
       }
     },
     [Symbol.toStringTag]: {
@@ -789,14 +892,21 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         let final = '';
         let first = true;
 
-        for await (const value of this) {
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+          
           if (first) {
             first = false;
-            final += value;
+            final += real_value;
           }
           else {
-            final += string + value;
+            final += string + real_value;
           }
+
+          value = await it.next();
         }
 
         return final;
@@ -805,9 +915,15 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     count: {
       async value() {
         let count = 0;
-        
-        for await (const _ of this)
+
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
           count++;
+
+          value = await it.next();
+        }
 
         return count;
       },
@@ -823,7 +939,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     zip: {
       async *value<T, O>(...others: AsyncIterableIterator<O>[]) : AsyncIterator<(T | O)[]> {
-        const it_array = [this, ...others].map((e: any) => e[Symbol.asyncIterator]() as AsyncIterator<T | O>);
+        const it_array = [this, ...others].map((e: any) => Symbol.asyncIterator in e ? e[Symbol.asyncIterator]() : e as AsyncIterator<T | O>);
         let values = await Promise.all(it_array.map(e => e.next()));
 
         while (values.every(e => !e.done)) {
@@ -886,11 +1002,18 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       async value<T>(callback: (value: T) => boolean) {
         const partition1 = [], partition2 = [];
 
-        for await (const value of this) {
-          if (callback(value)) 
-            partition1.push(value);
+        const it = this;
+        let value = await it.next();
+
+        while (!value.done) {
+          const real_value = value.value;
+          
+          if (callback(real_value)) 
+            partition1.push(real_value);
           else
-            partition2.push(value);
+            partition2.push(real_value);
+
+          value = await it.next();
         }
 
         return [partition1, partition2];
@@ -898,9 +1021,16 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
     },
     findIndex: {
       async value<T>(callback: (value: T) => boolean) {
-        for await (const [index, value] of this.asIndexedPairs()) {
-          if (callback(value))
+        const it = this.asIndexedPairs();
+        let value = await it.next();
+
+        while (!value.done) {
+          const [index, real_value] = value.value;
+
+          if (callback(real_value))
             return index;
+
+          value = await it.next();
         }
 
         return -1;

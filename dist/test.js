@@ -107,24 +107,24 @@ async function main() {
     assert.deepStrictEqual(n().find(e => e === 2), 2);
     assert.deepStrictEqual(n().find((e) => e === 4), undefined);
     // .every
-    assert.deepStrictEqual(n().every(e => e > 0), true);
-    assert.deepStrictEqual(n().every(e => e <= 2), false);
+    assert.strictEqual(n().every(e => e > 0), true);
+    assert.strictEqual(n().every(e => e <= 2), false);
     // .some
-    assert.deepStrictEqual(n().some(e => e <= 2), true);
-    assert.deepStrictEqual(n().some(e => e <= 0), false);
+    assert.strictEqual(n().some(e => e <= 2), true);
+    assert.strictEqual(n().some(e => e <= 0), false);
     // .toArray
     assert.deepStrictEqual(n().toArray(), [1, 2, 3]);
     // .reduce
-    assert.deepStrictEqual(n().reduce((acc, val) => acc + val), 6);
-    assert.deepStrictEqual(n().reduce((acc, val) => acc + val, 0), 6);
-    assert.deepStrictEqual(n().reduce((acc, val) => acc - val, 0), -6);
+    assert.strictEqual(n().reduce((acc, val) => acc + val), 6);
+    assert.strictEqual(n().reduce((acc, val) => acc + val, 0), 6);
+    assert.strictEqual(n().reduce((acc, val) => acc - val, 0), -6);
     // .forEach
     assert.deepStrictEqual(n().forEach(console.debug), undefined);
     // Non spec for sync iterator
     // .join
-    assert.deepStrictEqual(n().join(','), '1,2,3');
+    assert.strictEqual(n().join(','), '1,2,3');
     // .count
-    assert.deepStrictEqual(n().count(), 3);
+    assert.strictEqual(n().count(), 3);
     // .chain
     assert.deepStrictEqual(n().chain(n()).toArray(), [1, 2, 3, 1, 2, 3]);
     // .zip
@@ -138,11 +138,11 @@ async function main() {
     // .partition
     assert.deepStrictEqual(n().partition(c => c <= 2), [[1, 2], [3]]);
     // .findIndex
-    assert.deepStrictEqual(n().findIndex(e => e === 2), 1);
+    assert.strictEqual(n().findIndex(e => e === 2), 1);
     // .max
-    assert.deepStrictEqual(n().max(), 3);
+    assert.strictEqual(n().max(), 3);
     // .min
-    assert.deepStrictEqual(n().min(), 1);
+    assert.strictEqual(n().min(), 1);
     // Non testable with assert : .cycle
     let i = 1000;
     let cycle_generator = n().cycle();
@@ -167,13 +167,13 @@ async function main() {
     assert.deepStrictEqual(await an().flatMap(e => [e, -e]).toArray(), [1, -1, 2, -2, 3, -3]);
     // .find
     assert.deepStrictEqual(await an().find(e => e === 2), 2);
-    assert.deepStrictEqual(await an().find((e) => e === 4), undefined);
+    assert.strictEqual(await an().find((e) => e === 4), undefined);
     // .every
-    assert.deepStrictEqual(await an().every(e => e > 0), true);
-    assert.deepStrictEqual(await an().every(e => e <= 2), false);
+    assert.strictEqual(await an().every(e => e > 0), true);
+    assert.strictEqual(await an().every(e => e <= 2), false);
     // .some
-    assert.deepStrictEqual(await an().some(e => e <= 2), true);
-    assert.deepStrictEqual(await an().some(e => e <= 0), false);
+    assert.strictEqual(await an().some(e => e <= 2), true);
+    assert.strictEqual(await an().some(e => e <= 0), false);
     // .toArray
     assert.deepStrictEqual(await an().toArray(), [1, 2, 3]);
     // .reduce
@@ -184,9 +184,9 @@ async function main() {
     assert.deepStrictEqual(await an().forEach(console.debug), undefined);
     // Non spec for sync iterator
     // .join
-    assert.deepStrictEqual(await an().join(','), '1,2,3');
+    assert.strictEqual(await an().join(','), '1,2,3');
     // .count
-    assert.deepStrictEqual(await an().count(), 3);
+    assert.strictEqual(await an().count(), 3);
     // .chain
     assert.deepStrictEqual(await an().chain(an()).toArray(), [1, 2, 3, 1, 2, 3]);
     // .zip
@@ -200,11 +200,11 @@ async function main() {
     // .partition
     assert.deepStrictEqual(await an().partition(c => c <= 2), [[1, 2], [3]]);
     // .findIndex
-    assert.deepStrictEqual(await an().findIndex(e => e === 2), 1);
+    assert.strictEqual(await an().findIndex(e => e === 2), 1);
     // .max
-    assert.deepStrictEqual(await an().max(), 3);
+    assert.strictEqual(await an().max(), 3);
     // .min
-    assert.deepStrictEqual(await an().min(), 1);
+    assert.strictEqual(await an().min(), 1);
     // Non testable with assert : .cycle
     i = 1000;
     cycle_generator = an().cycle();
