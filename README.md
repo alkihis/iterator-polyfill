@@ -111,11 +111,15 @@ interface Iterator<T, TReturn = any, TNext = undefined> {
   forEach(callback: (value: T) => any) : void;
 }
 
+// with
+type PromiseOrType<T> = Promise<T> | T;
+// then
+
 interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   /** Map each value of iterator to another value via {callback}. */
-  map<R>(callback: (value: T) => R) : AsyncIterator<R, TReturn, TNext>;
+  map<R>(callback: (value: T) => PromiseOrType<R>) : AsyncIterator<R, TReturn, TNext>;
   /** Each value is given through {callback}, return `true` if value is needed into returned iterator. */
-  filter(callback: (value: T) => boolean) : AsyncIterator<T, TReturn, TNext>;
+  filter(callback: (value: T) => PromiseOrType<boolean>) : AsyncIterator<T, TReturn, TNext>;
   /** Create a new iterator that consume {limit} items, then stops. */
   take(limit: number) : AsyncIterator<T, TReturn, TNext>;
   /** Create a new iterator that skip {limit} items from source iterator, then yield all values. */
@@ -125,17 +129,17 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   /** Like map, but you can return a new iterator that will be flattened. */
   flatMap<R>(mapper: (value: T) => AsyncIterator<R> | R) : AsyncIterator<R, TReturn, TNext>;
   /** Find a specific value that returns `true` in {callback}, and return it. Returns `undefined` otherwise. */
-  find(callback: (value: T) => boolean) : Promise<T | undefined>;
+  find(callback: (value: T) => PromiseOrType<boolean>) : Promise<T | undefined>;
   /** Return `true` if each value of iterator validate {callback}. */
-  every(callback: (value: T) => boolean) : Promise<boolean>;
+  every(callback: (value: T) => PromiseOrType<boolean>) : Promise<boolean>;
   /** Return `true` if one value of iterator validate {callback}. */
-  some(callback: (value: T) => boolean) : Promise<boolean>;
+  some(callback: (value: T) => PromiseOrType<boolean>) : Promise<boolean>;
   /** Consume iterator and collapse values inside an array. */
   toArray(max_count?: number) : Promise<T[]>;
   /** Accumulate each item inside **acc** for each value **value**. */
-  reduce<V>(reducer: (acc: V, value: T) => V, initial_value?: V) : Promise<V>;
+  reduce<V>(reducer: (acc: V, value: T) => PromiseOrType<V>, initial_value?: V) : Promise<V>;
   /** Iterate over each value of iterator by calling **callback** for each value. */
-  forEach(callback: (value: T) => any) : Promise<void>;
+  forEach(callback: (value: T) => PromiseOrType<any>) : Promise<void>;
 }
 ```
 
