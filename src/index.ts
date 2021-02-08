@@ -1,5 +1,7 @@
 'use strict';
 
+type PromiseOrType<T> = Promise<T> | T;
+
 /*
  * Type definitions for extending Window interface
  */
@@ -91,9 +93,9 @@ interface Iterator<T, TReturn = any, TNext = undefined> {
 
 interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   /** Map each value of iterator to another value via {callback}. */
-  map<R>(callback: (value: T) => R) : AsyncIterator<R, TReturn, TNext>;
+  map<R>(callback: (value: T) => PromiseOrType<R>) : AsyncIterator<R, TReturn, TNext>;
   /** Each value is given through {callback}, return `true` if value is needed into returned iterator. */
-  filter(callback: (value: T) => boolean) : AsyncIterator<T, TReturn, TNext>;
+  filter(callback: (value: T) => PromiseOrType<boolean>) : AsyncIterator<T, TReturn, TNext>;
   /** Create a new iterator that consume {limit} items, then stops. */
   take(limit: number) : AsyncIterator<T, TReturn, TNext>;
   /** Create a new iterator that skip {limit} items from source iterator, then yield all values. */
@@ -103,17 +105,17 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   /** Like map, but you can return a new iterator that will be flattened. */
   flatMap<R>(mapper: (value: T) => AsyncIterator<R> | R) : AsyncIterator<R, TReturn, TNext>;
   /** Find a specific value that returns `true` in {callback}, and return it. Returns `undefined` otherwise. */
-  find(callback: (value: T) => boolean) : Promise<T | undefined>;
+  find(callback: (value: T) => PromiseOrType<boolean>) : Promise<T | undefined>;
   /** Return `true` if each value of iterator validate {callback}. */
-  every(callback: (value: T) => boolean) : Promise<boolean>;
+  every(callback: (value: T) => PromiseOrType<boolean>) : Promise<boolean>;
   /** Return `true` if one value of iterator validate {callback}. */
-  some(callback: (value: T) => boolean) : Promise<boolean>;
+  some(callback: (value: T) => PromiseOrType<boolean>) : Promise<boolean>;
   /** Consume iterator and collapse values inside an array. */
   toArray(max_count?: number) : Promise<T[]>;
   /** Accumulate each item inside **acc** for each value **value**. */
-  reduce<V = T>(reducer: (acc: V, value: T) => V, initial_value?: V) : Promise<V>;
+  reduce<V = T>(reducer: (acc: V, value: T) => PromiseOrType<V>, initial_value?: V) : Promise<V>;
   /** Iterate over each value of iterator by calling **callback** for each value. */
-  forEach(callback: (value: T) => any) : Promise<void>;
+  forEach(callback: (value: T) => PromiseOrType<any>) : Promise<void>;
 
   /** Join every item of iterator with {separator}, and return the built string. */
   join(separator: string) : Promise<string>;
@@ -122,17 +124,17 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   /** Chain iterables together, in provided order. */
   chain<I>(...iterables: AsyncIterableIterator<I>[]) : AsyncIterator<T | I, TReturn, TNext>;
   /** Iterate through multiple iterators together */
-  zip<O>(...others: AsyncIterableIterator<O>[]) : AsyncIterator<(T | O)[], TReturn, TNext>;
+  zip<O>(...others: AsyncIterableIterator<O>[]) : AsyncIterator<(T | O)[], TReturn, TNext>;
   /** 
    * It will call this closure on each element of the iterator, and ignore elements until it returns false. 
    * After false is returned, dropWhile()'s job is over, and the rest of the elements are yielded. 
    */
-  dropWhile(callback: (value: T) => boolean) : AsyncIterator<T, TReturn, TNext>;
+  dropWhile(callback: (value: T) => PromiseOrType<boolean>) : AsyncIterator<T, TReturn, TNext>;
   /** 
    * It will call this closure on each element of the iterator, and yield elements until it returns false. 
    * After false is returned, takeWhile()'s job is over, and the rest of the elements are ignored. 
    */
-  takeWhile(callback: (value: T) => boolean) : AsyncIterator<T, TReturn, TNext>;
+  takeWhile(callback: (value: T) => PromiseOrType<boolean>) : AsyncIterator<T, TReturn, TNext>;
   /** 
    * Yield items until one item is `null` or `undefined`.
    * 
@@ -143,9 +145,9 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
    * Consume iterator to create two partitions : first is filled when `callback(item)` is `true`, 
    * second when `callback(item)` is `false`. 
    */
-  partition(callback: (value: T) => boolean) : Promise<[T[], T[]]>;
+  partition(callback: (value: T) => PromiseOrType<boolean>) : Promise<[T[], T[]]>;
   /** Find index in iterator for the first item where {callback} returns `true` (consume iterator). */
-  findIndex(callback: (value: T) => boolean) : Promise<number>;
+  findIndex(callback: (value: T) => PromiseOrType<boolean>) : Promise<number>;
   /** Return the max element in iterator (consume it). */
   max() : Promise<T>;
   /** Return the max element in iterator (consume it). */
@@ -682,12 +684,12 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       }
     },
     map: {
-      async *value<T, R>(callback: (value: T) => R) {
+      async *value<T, R>(callback: (value: T) => PromiseOrType<R>) {
         const it = this;
         let value = await it.next();
 
         while (!value.done) {
-          const real_value = callback(value.value);
+          const real_value = await callback(value.value);
           const next_value = yield real_value;
           value = await it.next(next_value);
         }
@@ -696,7 +698,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       },
     },
     filter: {
-      async *value<T>(callback: (value: T) => boolean) {
+      async *value<T>(callback: (value: T) => PromiseOrType<boolean>) {
         const it = this;
         let value = await it.next();
         let next_value;
@@ -704,7 +706,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         while (!value.done) {
           const real_value = value.value;
 
-          if (callback(real_value)) {
+          if (await callback(real_value)) {
             next_value = yield real_value;
           }
 
@@ -715,14 +717,14 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       },
     },
     find: {
-      async value<T>(callback: (value: T) => boolean) {
+      async value<T>(callback: (value: T) => PromiseOrType<boolean>) {
         const it = this;
         let value = await it.next();
 
         while (!value.done) {
           const real_value = value.value;
 
-          if (callback(real_value))
+          if (await callback(real_value))
             return real_value;
 
           value = await it.next();
@@ -730,14 +732,14 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       }
     },
     every: {
-      async value<T>(callback: (value: T) => boolean) {
+      async value<T>(callback: (value: T) => PromiseOrType<boolean>) {
         const it = this;
         let value = await it.next();
 
         while (!value.done) {
           const real_value = value.value;
 
-          if (!callback(real_value))
+          if (!(await callback(real_value)))
             return false;
 
           value = await it.next();
@@ -747,14 +749,14 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       }
     },
     some: {
-      async value<T>(callback: (value: T) => boolean) {
+      async value<T>(callback: (value: T) => PromiseOrType<boolean>) {
         const it = this;
         let value = await it.next();
 
         while (!value.done) {
           const real_value = value.value;
 
-          if (callback(real_value))
+          if (await callback(real_value))
             return true;
 
           value = await it.next();
@@ -890,7 +892,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       },
     },
     reduce: {
-      async value<T, V>(reducer: (acc: V, value: T) => V, initial_value?: V) {
+      async value<T, V>(reducer: (acc: V, value: T) => PromiseOrType<V>, initial_value?: V) {
         let acc = initial_value;
 
         const it = this;
@@ -899,21 +901,21 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         }
 
         for await (const value of it) {
-          acc = reducer(acc!, value);
+          acc = await reducer(acc!, value);
         }
 
         return acc;
       }
     },
     forEach: {
-      async value<T>(callback: (value: T) => any) {
+      async value<T>(callback: (value: T) => PromiseOrType<any>) {
         const it = this;
         let value = await it.next();
 
         while (!value.done) {
           const real_value = value.value;
 
-          callback(real_value);
+          await callback(real_value);
 
           value = await it.next();
         }
@@ -975,8 +977,8 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       }
     },
     zip: {
-      async *value<T, O>(...others: AsyncIterableIterator<O>[]) : AsyncIterator<(T | O)[]> {
-        const it_array = [this, ...others].map((e: any) => Symbol.asyncIterator in e ? e[Symbol.asyncIterator]() : e as AsyncIterator<T | O>);
+      async *value<T, O>(...others: AsyncIterableIterator<O>[]) : AsyncIterator<(T | O)[]> {
+        const it_array = [this, ...others].map((e: any) => Symbol.asyncIterator in e ? e[Symbol.asyncIterator]() : e as AsyncIterator<T | O>);
         let values = await Promise.all(it_array.map(e => e.next()));
 
         while (values.every(e => !e.done)) {
@@ -986,7 +988,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       },
     },
     takeWhile: {
-      async *value<T>(callback: (value: T) => boolean) {
+      async *value<T>(callback: (value: T) => PromiseOrType<boolean>) {
         const it = this;
         let value = await it.next();
         let next_value;
@@ -994,7 +996,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         while (!value.done) {
           const real_value = value.value;
 
-          if (callback(real_value)) {
+          if (await callback(real_value)) {
             next_value = yield real_value;
           }
           else {
@@ -1008,7 +1010,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       }
     },
     dropWhile: {
-      async *value<T>(callback: (value: T) => boolean) {
+      async *value<T>(callback: (value: T) => PromiseOrType<boolean>) {
         const it = this;
         let value = await it.next();
         let next_value;
@@ -1017,7 +1019,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         while (!value.done) {
           const real_value = value.value;
 
-          if (!finished && callback(real_value)) {
+          if (!finished && await callback(real_value)) {
             value = await it.next(next_value);
             continue;
           }
@@ -1053,7 +1055,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       }
     },
     partition: {
-      async value<T>(callback: (value: T) => boolean) {
+      async value<T>(callback: (value: T) => PromiseOrType<boolean>) {
         const partition1 = [], partition2 = [];
 
         const it = this;
@@ -1062,7 +1064,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         while (!value.done) {
           const real_value = value.value;
           
-          if (callback(real_value)) 
+          if (await callback(real_value))
             partition1.push(real_value);
           else
             partition2.push(real_value);
@@ -1074,7 +1076,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       },
     },
     findIndex: {
-      async value<T>(callback: (value: T) => boolean) {
+      async value<T>(callback: (value: T) => PromiseOrType<boolean>) {
         const it = this;
         let value = await it.next();
         let i = 0;
@@ -1082,7 +1084,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
         while (!value.done) {
           const real_value = value.value;
 
-          if (callback(real_value))
+          if (await callback(real_value))
             return i;
 
           value = await it.next();
