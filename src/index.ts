@@ -30,6 +30,7 @@ interface Iterator<T, TReturn = any, TNext = undefined> {
   /** Map each value of iterator to another value via {callback}. */
   map<R>(callback: (value: T) => R) : Iterator<R, TReturn, TNext>;
   /** Each value is given through {callback}, return `true` if value is needed into returned iterator. */
+  filter<S extends T>(callback: (value: T) => value is S) : Iterator<S, TReturn, TNext>
   filter(callback: (value: T) => boolean) : Iterator<T, TReturn, TNext>;
   /** Create a new iterator that consume {limit} items, then stops. */
   take(limit: number) : Iterator<T, TReturn, TNext>;
@@ -48,7 +49,9 @@ interface Iterator<T, TReturn = any, TNext = undefined> {
   /** Consume iterator and collapse values inside an array. */
   toArray(max_count?: number) : T[];
   /** Accumulate each item inside **acc** for each value **value**. */
-  reduce<V = T>(reducer: (acc: V, value: T) => V, initial_value?: V) : V;
+  reduce(reducer: (acc: T, value: T) => T): T
+  reduce(reducer: (acc: T, value: T) => T, initial_value: T): T
+  reduce<U>(reducer: (acc: U, value: T) => U, initial_value: U) : U;
   /** Iterate over each value of iterator by calling **callback** for each value. */
   forEach(callback: (value: T) => any) : void;
 
@@ -95,6 +98,7 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   /** Map each value of iterator to another value via {callback}. */
   map<R>(callback: (value: T) => PromiseOrType<R>) : AsyncIterator<R, TReturn, TNext>;
   /** Each value is given through {callback}, return `true` if value is needed into returned iterator. */
+  filter<S extends T>(callback: (value: T) => value is S) : AsyncIterator<S, TReturn, TNext>;
   filter(callback: (value: T) => PromiseOrType<boolean>) : AsyncIterator<T, TReturn, TNext>;
   /** Create a new iterator that consume {limit} items, then stops. */
   take(limit: number) : AsyncIterator<T, TReturn, TNext>;
@@ -113,7 +117,9 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
   /** Consume iterator and collapse values inside an array. */
   toArray(max_count?: number) : Promise<T[]>;
   /** Accumulate each item inside **acc** for each value **value**. */
-  reduce<V = T>(reducer: (acc: V, value: T) => PromiseOrType<V>, initial_value?: V) : Promise<V>;
+  reduce(reducer: (acc: T, value: T) => PromiseOrType<T>) : T
+  reduce(reducer: (acc: T, value: T) => PromiseOrType<T>, initial_value: T) : T
+  reduce<U>(reducer: (acc: U, value: T) => PromiseOrType<U>, initial_value: U) : Promise<U>;
   /** Iterate over each value of iterator by calling **callback** for each value. */
   forEach(callback: (value: T) => PromiseOrType<any>) : Promise<void>;
 
