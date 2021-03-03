@@ -22,6 +22,11 @@ require('iterator-polyfill');
 
 TypeScript types are bundled within the package as global interfaces, so using the base iterators (array iterators, generators) should not throw type warnings.
 
+You can also use script tag implementation for use in browser environnements:
+```html
+<script src="https://unpkg.com/iterator-polyfill/dist/index.js"></script>
+```
+
 ## Implementation
 
 The polyfill auto applies to iterators used by arrays, generators and async generators. Usually, you don't need to polyfill them.
@@ -71,7 +76,7 @@ async function* asyncNumbers() {
 numbers()
   .map(e => e * 2)
   .take(2)
-  .toArray(); // [2, 4] 
+  .toArray(); // [2, 4]
 
 asyncNumbers()
   .filter(e => !!(e % 2))
