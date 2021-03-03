@@ -110,7 +110,7 @@ async function main() {
   // .toArray
   assert.deepStrictEqual(n().toArray(), [1, 2, 3]);
   // .reduce
-  assert.strictEqual(n().reduce((acc, val) => acc + val), 6);
+  assert.strictEqual((n() as Generator<number>).reduce((acc, val) => acc + val), 6);
   assert.strictEqual(n().reduce((acc, val) => acc + val, 0), 6);
   assert.strictEqual(n().reduce((acc, val) => acc - val, 0), -6);
   // .forEach
@@ -176,7 +176,7 @@ async function main() {
   // .toArray
   assert.deepStrictEqual(await an().toArray(), [1, 2, 3]);
   // .reduce
-  assert.deepStrictEqual(await an().reduce((acc: number, val) => acc + val), 6);
+  assert.deepStrictEqual(await (an() as AsyncGenerator<number>).reduce((acc: number, val) => acc + val), 6);
   assert.deepStrictEqual(await an().reduce((acc, val) => acc + val, 0), 6);
   assert.deepStrictEqual(await an().reduce((acc, val) => acc - val, 0), -6);
   // .forEach
