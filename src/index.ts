@@ -7,11 +7,11 @@ type PromiseOrType<T> = Promise<T> | T;
  */
 
 interface IteratorPrototype<T, TReturn = any, TNext = undefined> {
-  protoype: Iterator<T, TReturn, TNext>;
+  prototype: Iterator<T, TReturn, TNext>;
 }
 
 interface AsyncIteratorPrototype<T, TReturn = any, TNext = undefined> {
-  protoype: AsyncIterator<T, TReturn, TNext>;
+  prototype: AsyncIterator<T, TReturn, TNext>;
 }
 
 interface Window {
@@ -410,12 +410,16 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       },
     },
     reduce: {
-      value<T, V>(reducer: (acc: V, value: T) => V, initial_value?: V) {
-        let acc = initial_value;
+      value<T, V>(reducer: (acc: V, value: T) => V, ...initial_value: [V] | []) {
 
         const it = this;
-        if (acc === undefined) {
-          acc = it.next().value;
+        let acc: V
+        if (initial_value.length === 0) {
+          const { value, done } = it.next();
+          if (done) throw new TypeError("Called reduce on empty iterator without initial value");
+          acc = value;
+        } else {
+          acc = initial_value[0];
         }
 
         let value = it.next();
@@ -898,12 +902,15 @@ interface AsyncIterator<T, TReturn = any, TNext = undefined> {
       },
     },
     reduce: {
-      async value<T, V>(reducer: (acc: V, value: T) => PromiseOrType<V>, initial_value?: V) {
-        let acc = initial_value;
-
+      async value<T, V>(reducer: (acc: V, value: T) => PromiseOrType<V>, ...initial_value: [V] | []) {
         const it = this;
-        if (acc === undefined) {
-          acc = (await it.next()).value;
+        let acc;
+        if (initial_value.length === 0) {
+          const { done, value } = await it.next();
+          if (done) throw new TypeError("Called reduce on empty iterator without initial value");
+          acc = value;
+        } else {
+          acc = initial_value[0];
         }
 
         for await (const value of it) {

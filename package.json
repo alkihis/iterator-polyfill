@@ -1,19 +1,25 @@
 {
   "name": "iterator-polyfill",
-  "version": "1.0.9",
-  "description": "",
+  "version": "1.1.1",
+  "description": "Provide a polyfill for all methods defined in [iterator helpers proposal](https://github.com/tc39/proposal-iterator-helpers), both for `Iterator` and `AsyncIterator`.",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --declaration",
+    "test": "node dist/test.js"
   },
   "keywords": [],
   "author": "Louis Béranger",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alkihis/iterator-polyfill"
+    "url": "git+https://github.com/alkihis/iterator-polyfill.git"
   },
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^14.0.13"
-  }
+  },
+  "types": "./dist/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/alkihis/iterator-polyfill/issues"
+  },
+  "homepage": "https://github.com/alkihis/iterator-polyfill#readme"
 }

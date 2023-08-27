@@ -1,6 +1,9 @@
 import './index';
 import * as assert from 'assert';
 
+function* empty<T>(): Generator<T> {
+}
+
 function* numbers() {
   yield 1;
   yield 2;
@@ -28,6 +31,9 @@ function* fuseCompatible() {
   yield 3;
   yield undefined;
   yield 5;
+}
+
+async function* emptyAsync<T>(): AsyncGenerator<T> {
 }
 
 async function* asyncNumbers() {
@@ -113,6 +119,10 @@ async function main() {
   assert.strictEqual((n() as Generator<number>).reduce((acc, val) => acc + val), 6);
   assert.strictEqual(n().reduce((acc, val) => acc + val, 0), 6);
   assert.strictEqual(n().reduce((acc, val) => acc - val, 0), -6);
+  assert.strictEqual(empty<number>().reduce((acc, val) => acc + val, 42), 42);
+  assert.throws(() => {
+    empty<number>().reduce((acc, val) => acc + val);
+  });
   // .forEach
   assert.deepStrictEqual(n().forEach(console.debug), undefined);
 
@@ -179,6 +189,10 @@ async function main() {
   assert.deepStrictEqual(await (an() as AsyncGenerator<number>).reduce((acc: number, val) => acc + val), 6);
   assert.deepStrictEqual(await an().reduce((acc, val) => acc + val, 0), 6);
   assert.deepStrictEqual(await an().reduce((acc, val) => acc - val, 0), -6);
+  assert.deepStrictEqual(await emptyAsync<number>().reduce((acc, val) => acc + val, 42), 42);
+  assert.rejects(async () => {
+    await emptyAsync<number>().reduce((acc, val) => acc + val);
+  });
   // .forEach
   assert.deepStrictEqual(await an().forEach(console.debug), undefined);
 
