@@ -1,5 +1,7 @@
 # iterator-polyfill
 
+**A fork of [alkihis/iterator-polyfill](https://github.com/alkihis/iterator-polyfill), with fixed typos and spec-complient `reduce` implementation**
+
 Provide a polyfill for all methods defined in [iterator helpers proposal](https://github.com/tc39/proposal-iterator-helpers), both for `Iterator` and `AsyncIterator`.
 
 ## Installation
