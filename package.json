@@ -1,5 +1,5 @@
 {
-  "name": "@malien/iterator-polyfill",
+  "name": "iterator-polyfill",
   "version": "1.1.1",
   "description": "Provide a polyfill for all methods defined in [iterator helpers proposal](https://github.com/tc39/proposal-iterator-helpers), both for `Iterator` and `AsyncIterator`.",
   "main": "dist/index.js",
